@@ -1,7 +1,8 @@
-import rikiki_logo from "@/assets/77-778239_ace-card-png.webp";
+import rikiki_logo from "@/assets/playing-card-card-game-poker.webp";
 import "./App.scss";
 import Rules from "@components/Rules/Rules";
 import Players from "@/components/Players/Players";
+import Table from "./components/Table/Table";
 
 function App() {
 	return (
@@ -13,6 +14,7 @@ function App() {
 			/>
 			<Rules />
 			<Players />
+			<Table />
 		</section>
 	);
 }
