@@ -9,10 +9,18 @@ import { ColumnGroup } from "primereact/columngroup";
 import { Row } from "primereact/row";
 import { DataTable } from "primereact/datatable";
 import { InputNumber } from "primereact/inputnumber";
+import { Steps } from "primereact/steps";
+import { useState } from "react";
 
 const Table = () => {
 	const [points, setPoints] = useRecoilState(pointsAtom);
 	const players = useRecoilValue(playersAtom);
+	const [activeIndex, setActiveIndex] = useState(0);
+	const [cards, setCards] = useState(undefined);
+	const [index, setIndex] = useState(1);
+	const [assumption, setAssumption] = useState({});
+	const [taken, setTaken] = useState({});
+	const [isStartButtonVisible, setIsStartButtonVisible] = useState(true);
 
 	const columns = players.flatMap((el) => {
 		const insideArray = [
@@ -37,9 +45,10 @@ const Table = () => {
 			return (
 				<Column
 					key={element.field}
+					className={element.field}
 					header={element.name}
 					field={`${el.id + "." + element.field}`}
-					style={{ minWidth: "50px" }}
+					style={{ minWidth: "70px" }}
 				/>
 			);
 		});
@@ -78,6 +87,12 @@ const Table = () => {
 		return `${rowData.round}.`;
 	};
 
+	function sumObjectValues(object) {
+		return Object.values(object).reduce((accumulator, value) => {
+			return accumulator + value;
+		}, 0);
+	}
+
 	const startTheGame = () => {
 		const base = {
 			assumption: undefined,
@@ -86,47 +101,211 @@ const Table = () => {
 			points_in_total: undefined,
 		};
 
-		const playerWithBase = players.map((el) => {
-			return {
-				[el.id]: {
-					...base,
-				},
-			};
-		});
+		const playerWithBase = players.map((el) => ({
+			[el.id]: {
+				...base,
+			},
+		}));
 
 		const init = [
 			{
-				round: 1,
-				cards: 13,
-				...playerWithBase,
+				round: index,
+				cards: cards,
+				...playerWithBase.reduce((acc, player) => ({ ...acc, ...player }), {}),
 			},
 		];
 
 		setPoints(init);
+		setIsStartButtonVisible(false);
 	};
-	console.log("init", points);
+
+	const startOfTheRound = () => {
+		setActiveIndex(1);
+
+		const assumptionArray = Object.entries(assumption).map(([key, value]) => ({ key, value }));
+
+		const newPoints = points.map((point) => {
+			if (point.round === index) {
+				const updatedPoint = { ...point, cards: cards };
+
+				assumptionArray.forEach((el) => {
+					// Check if the property exists before updating
+					if (updatedPoint[el.key]) {
+						// Create a new object to avoid modifying the original object directly
+						updatedPoint[el.key] = { ...updatedPoint[el.key], assumption: el.value };
+					}
+				});
+
+				return updatedPoint;
+			}
+			return point;
+		});
+
+		setPoints(newPoints);
+	};
+
+	const endOfTheRound = () => {
+		const takenArray = Object.entries(taken).map(([key, value]) => ({ key, value }));
+
+		const newPoints = points.map((point) => {
+			if (point.round === index) {
+				const updatedPoint = { ...point };
+
+				takenArray.forEach((el) => {
+					// Check if the property exists before updating
+					if (updatedPoint[el.key]) {
+						//Calculate the points for the player in this round
+						const val_assumption = updatedPoint[el.key].assumption;
+						const val_taken = el.value;
+						let new_point = undefined;
+						if (val_assumption === val_taken) {
+							new_point = 10 + 2 * val_taken;
+						}
+						if (val_assumption !== val_taken) {
+							new_point = -Math.abs(val_assumption - val_taken) * 2;
+						}
+
+						//calculate the total points
+						let new_total = undefined;
+						if (index === 1) {
+							new_total = new_point;
+						}
+
+						// Create a new object to avoid modifying the original object directly
+						updatedPoint[el.key] = { ...updatedPoint[el.key], taken: el.value, points_in_round: new_point, points_in_total: new_total };
+					}
+				});
+
+				return updatedPoint;
+			}
+			return point;
+		});
+
+		setPoints(newPoints);
+
+		setIndex((old) => old + 1);
+		setAssumption({});
+		setTaken({});
+		setActiveIndex(0);
+	};
 
 	const AddNewRow = () => {
+		const steps = [
+			{
+				label: "Start of the round",
+			},
+			{
+				label: "End of the round",
+			},
+		];
+
 		return (
 			<div className="add-new-row">
-				<div className="mezo">
-					<label
-						htmlFor="cards_in_round"
-						className="font-bold block mb-2"
-					>
-						Cards in Round
-					</label>
-					<InputNumber
-						inputId="cards_in_round"
-						placeholder="Cards in round"
-					/>
-				</div>
+				<Steps
+					activeIndex={activeIndex}
+					model={steps}
+				/>
+				<br />
+				{activeIndex === 0 && (
+					<Card>
+						<div className="mezo">
+							<label
+								htmlFor="cards_in_round"
+								className="font-bold block mb-2"
+							>
+								Cards in Round
+							</label>
+							<InputNumber
+								inputId="cards_in_round"
+								placeholder="Cards in round"
+								value={cards}
+								onValueChange={(e) => setCards(e.value)}
+							/>
+						</div>
+						<br />
+						<div className="card flex flex-wrap gap-3 p-fluid">
+							{players.map((el) => {
+								return (
+									<div
+										className="flex-auto"
+										key={el.id}
+									>
+										<label
+											htmlFor={el.id}
+											className="font-bold block mb-2"
+										>
+											{el.name}
+										</label>
+										<InputNumber
+											inputId={el.id}
+											name={el.id}
+											placeholder="Assume the number of hits in this round"
+											value={assumption[el.id]}
+											onChange={(e) => setAssumption({ ...assumption, [e.originalEvent.target.name]: e.value })}
+										/>
+									</div>
+								);
+							})}
+						</div>
+						{sumObjectValues(assumption) === cards && <p className="text-center text-red-500">The sum of the fields cannot be equal to the card number!</p>}
+						<br />
+						<div className="flex justify-content-end flex-wrap">
+							<Button
+								label="Let's play"
+								outlined
+								onClick={() => startOfTheRound()}
+							/>
+						</div>
+					</Card>
+				)}
+				{activeIndex === 1 && (
+					<Card>
+						<div className="card flex flex-wrap gap-3 p-fluid">
+							{players.map((el) => {
+								return (
+									<div
+										className="flex-auto"
+										key={el.id}
+									>
+										<label
+											htmlFor={el.id}
+											className="font-bold block mb-2"
+										>
+											{el.name}
+										</label>
+										<InputNumber
+											inputId={el.id}
+											name={el.id}
+											placeholder="The number of hits in this round"
+											value={taken[el.id]}
+											onChange={(e) => setTaken({ ...taken, [e.originalEvent.target.name]: e.value })}
+										/>
+									</div>
+								);
+							})}
+						</div>
+						<br />
+						<div className="flex justify-content-end flex-wrap">
+							<Button
+								label="Finish this round"
+								outlined
+								onClick={() => endOfTheRound()}
+							/>
+						</div>
+					</Card>
+				)}
 			</div>
 		);
 	};
 
 	const endTheGame = () => {
 		setPoints([]);
+		setActiveIndex(0);
+		setCards(undefined);
+		setIndex(1);
+		setIsStartButtonVisible(true);
+		setAssumption({});
+		setTaken({});
 	};
 
 	return (
@@ -135,13 +314,15 @@ const Table = () => {
 			className="rikiki-table"
 		>
 			<div className="buttons-container">
-				<Button
-					label="Start"
-					size="small"
-					severity="secondary"
-					outlined
-					onClick={() => startTheGame()}
-				/>
+				{isStartButtonVisible && (
+					<Button
+						label="Start"
+						size="small"
+						severity="secondary"
+						outlined
+						onClick={() => startTheGame()}
+					/>
+				)}
 				<Button
 					label="End"
 					size="small"

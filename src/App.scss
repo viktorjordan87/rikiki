@@ -1,3 +1,5 @@
+@import "@/variables.scss";
+
 .rikiki-logo {
 	width: 150px;
 	margin-bottom: 5vh;
@@ -5,6 +7,9 @@
 
 .rikiki-body {
 	margin: 5vmax 5vw;
+	@include for-size(mobile, down) {
+		margin: 5vmax 2vw;
+	}
 }
 
 .p-card.p-component {
