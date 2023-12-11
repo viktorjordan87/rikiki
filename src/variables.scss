@@ -1,0 +1,251 @@
+@use 'sass:math';
+
+/*Color palette*/
+$color_white_0: #ffffff;
+$color_white_1: #c9d3e5; //gekko white
+$color_white_2: #f7f7f7;
+$color_white_3: #f8f9fa;
+
+$color_black_0: #000000;
+$color_black_1: #1b1c1d;
+$color_black_2: #121113;
+$color_black_3: #222725;
+
+$color_orange_0: #ff8c42;
+$color_orange_2: #ffb30f;
+
+$color_yellow_0: #fff275;
+
+// $color_green_0: #1f6c48;
+$color_green_0: #08931b;
+$color_green_1: #15994e;
+
+$color_red_0: #ff3c38;
+
+$color_gray_0: #333333;
+$color_gray_1: #555555;
+$color_gray_2: #6d6d64;
+$color_gray_3: #7e7e7e;
+$color_gray_4: #616161;
+$color_gray_5: #8c8c8c;
+$color_gray_6: #999999;
+$color_gray_7: #b1b1b1;
+$color_gray_8: #d9d9d9;
+$color_gray_9: #eff3f8;
+$color_gray_10: #f8f8fa;
+
+$color_blue_0: #1d2536; //gekko blue
+$color_blue_1: #6366f1; // gekko folder blue
+$color_blue_2: #d1d2ff; //gekko folder lightblue
+$color_blue_3: #c9d3e5; //gekko folder lightblue 2
+
+$color_purple_0: #6366f1; //gekko sidebar arrow
+
+/*Media queries breakpoints*/
+$query__mobile_mini: 393px;
+$query__mobile: 760px;
+$query__tablet: 1080px;
+$query__desktop: 1440px;
+$query__ultrahd: 1920px;
+$query__4k: 2560px;
+
+/* Element First Media Queries
+========================================================= */
+
+// A map of breakpoints.
+$breakpoints: (
+	mobile_mini: $query__mobile_mini,
+	mobile: $query__mobile,
+	tablet: $query__tablet,
+	desktop: $query__desktop,
+	ultrahd: $query__ultrahd,
+	for4k: $query__4k,
+);
+
+@mixin for-size($breakpoint, $direction: down) {
+	// If the breakpoint exists in the map.
+	@if map-has-key($breakpoints, $breakpoint) {
+		// Get the breakpoint value.
+		$breakpoint-value: map-get($breakpoints, $breakpoint);
+
+		// Determine the direction and then write the media query.
+		@if $direction == up {
+			@media (min-width: ($breakpoint-value + 1)) {
+				@content;
+			}
+		} @else if $direction == down {
+			@media (max-width: $breakpoint-value) {
+				@content;
+			}
+		}
+	}
+	// If the breakpoint doesn't exist in the map, pass a manual breakpoint
+	@else {
+		@if $direction == up {
+			@media (min-width: $breakpoint) {
+				@content;
+			}
+		} @else if $direction == down {
+			@media (max-width: $breakpoint) {
+				@content;
+			}
+		}
+	}
+}
+
+//General padding settings if you want left and right empty white space on your side
+$k4k_padding_left: 8vw;
+$k4k_padding_right: 8vw;
+$ultrahd_padding_left: 7vw;
+$ultrahd_padding_right: 7vw;
+$desktop_padding_left: 7vw;
+$desktop_padding_right: 7vw;
+$laptop_padding_left: 5vw;
+$laptop_padding_right: 5vw;
+$tablet_padding_left: 3vw;
+$tablet_padding_right: 3vw;
+$mobile_padding_left: 0;
+$mobile_padding_right: 0;
+
+//General padding settings if you want left and right empty white space on your side
+$k4k_margin_left: $k4k_padding_left;
+$k4k_margin_right: $k4k_padding_right;
+$ultrahd_margin_left: $ultrahd_padding_left;
+$ultrahd_margin_right: $ultrahd_padding_right;
+$desktop_margin_left: $desktop_padding_left;
+$desktop_margin_right: $desktop_padding_right;
+$laptop_margin_left: $laptop_padding_left;
+$laptop_margin_right: $laptop_padding_right;
+$tablet_margin_left: $tablet_padding_left;
+$tablet_margin_right: $tablet_padding_right;
+$mobile_margin_left: $mobile_padding_left;
+$mobile_margin_right: $mobile_padding_right;
+
+@mixin padding-width {
+	@include for-size(desktop, up) {
+		padding-left: $desktop_padding_left;
+		padding-right: $desktop_padding_right;
+	}
+
+	@include for-size(ultrahd, up) {
+		padding-left: $ultrahd_padding_left;
+		padding-right: $ultrahd_padding_right;
+	}
+
+	@include for-size(4k, up) {
+		padding-left: $k4k_padding_left;
+		padding-right: $k4k_padding_right;
+	}
+
+	@include for-size(desktop, down) {
+		padding-left: $laptop_padding_left;
+		padding-right: $laptop_padding_right;
+	}
+
+	@include for-size(tablet, down) {
+		padding-left: $tablet_padding_left;
+		padding-right: $tablet_padding_right;
+	}
+
+	@include for-size(mobile, down) {
+		padding-left: $mobile_padding_left;
+		padding-right: $mobile_padding_right;
+	}
+}
+
+@mixin margin-width {
+	@include for-size(desktop, up) {
+		margin-left: $desktop_margin_left;
+		margin-right: $desktop_margin_right;
+	}
+
+	@include for-size(ultrahd, up) {
+		margin-left: $ultrahd_margin_left;
+		margin-right: $ultrahd_margin_right;
+	}
+
+	@include for-size(4k, up) {
+		margin-left: $k4k_margin_left;
+		margin-right: $k4k_margin_right;
+	}
+
+	@include for-size(desktop, down) {
+		margin-left: $laptop_margin_left;
+		margin-right: $laptop_margin_right;
+	}
+
+	@include for-size(tablet, down) {
+		margin-left: $tablet_margin_left;
+		margin-right: $tablet_margin_right;
+	}
+
+	@include for-size(mobile, down) {
+		margin-left: $mobile_margin_left;
+		margin-right: $mobile_margin_right;
+	}
+}
+
+@mixin -margin-width {
+	@include for-size(desktop, up) {
+		margin-left: -$desktop_margin_left;
+		margin-right: -$desktop_margin_right;
+	}
+
+	@include for-size(ultrahd, up) {
+		margin-left: -$ultrahd_margin_left;
+		margin-right: -$ultrahd_margin_right;
+	}
+
+	@include for-size(4k, up) {
+		margin-left: -$k4k_margin_left;
+		margin-right: -$k4k_margin_right;
+	}
+
+	@include for-size(desktop, down) {
+		margin-left: -$laptop_margin_left;
+		margin-right: -$laptop_margin_right;
+	}
+
+	@include for-size(tablet, down) {
+		margin-left: -$tablet_margin_left;
+		margin-right: -$tablet_margin_right;
+	}
+
+	@include for-size(mobile, down) {
+		margin-left: -$mobile_margin_left;
+		margin-right: -$mobile_margin_right;
+	}
+}
+
+/* Page style - with margin */
+@mixin component-with-margin {
+	width: 80vw;
+	@include for-size(tablet, down) {
+		width: 90vw;
+	}
+	@include for-size(mobile, down) {
+		width: 100vw;
+	}
+	margin: 5vmin auto;
+}
+
+//Elegant scrollbar
+@mixin scrollbar($size: 6px, $foreground-color: $color_green_0, $background-color: transparent) {
+	// For Chrome & Safari
+	&::-webkit-scrollbar {
+		width: $size;
+		height: $size;
+	}
+	&::-webkit-scrollbar-thumb {
+		background: $foreground-color;
+		border-radius: 20px; /* roundness of the scroll thumb */
+		border: 3px solid $color_green_0; /* creates padding around scroll thumb */
+	}
+	&::-webkit-scrollbar-track {
+		background: $background-color;
+	}
+
+	// Standard version (Firefox only for now)
+	scrollbar-width: thin;
+	scrollbar-color: $foreground-color $background-color;
+}

@@ -1,0 +1,14 @@
+@import "@/variables.scss";
+
+.players-container {
+	.add-new-player {
+		margin: 2rem 0;
+	}
+
+	.buttons-container {
+		margin: 2rem 0;
+		button {
+			margin-right: 1rem;
+		}
+	}
+}
