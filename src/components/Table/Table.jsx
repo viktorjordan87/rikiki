@@ -124,22 +124,24 @@ const Table = () => {
 
 		const assumptionArray = Object.entries(assumption).map(([key, value]) => ({ key, value }));
 
-		const newPoints = points.map((point) => {
-			if (point.round === index) {
-				const updatedPoint = { ...point, cards: cards };
+		const newPoints = points
+			.map((point) => {
+				if (point.round === index) {
+					const updatedPoint = { ...point, cards: cards };
 
-				assumptionArray.forEach((el) => {
-					// Check if the property exists before updating
-					if (updatedPoint[el.key]) {
-						// Create a new object to avoid modifying the original object directly
-						updatedPoint[el.key] = { ...updatedPoint[el.key], assumption: el.value };
-					}
-				});
+					assumptionArray.forEach((el) => {
+						// Check if the property exists before updating
+						if (updatedPoint[el.key]) {
+							// Create a new object to avoid modifying the original object directly
+							updatedPoint[el.key] = { ...updatedPoint[el.key], assumption: el.value };
+						}
+					});
 
-				return updatedPoint;
-			}
-			return point;
-		});
+					return updatedPoint;
+				}
+				return point;
+			})
+			.sort((a, b) => a.round - b.round);
 
 		setPoints(newPoints);
 	};
@@ -147,47 +149,66 @@ const Table = () => {
 	const endOfTheRound = () => {
 		const takenArray = Object.entries(taken).map(([key, value]) => ({ key, value }));
 
-		const newPoints = points.map((point) => {
-			if (point.round === index) {
-				const updatedPoint = { ...point };
+		const newPoints = points
+			.map((point) => {
+				if (point.round === index) {
+					const updatedPoint = { ...point };
 
-				takenArray.forEach((el) => {
-					// Check if the property exists before updating
-					if (updatedPoint[el.key]) {
-						//Calculate the points for the player in this round
-						const val_assumption = updatedPoint[el.key].assumption;
-						const val_taken = el.value;
-						let new_point = undefined;
-						if (val_assumption === val_taken) {
-							new_point = 10 + 2 * val_taken;
+					takenArray.forEach((el) => {
+						// Check if the property exists before updating
+						if (updatedPoint[el.key]) {
+							//Calculate the points for the player in this round
+							const val_assumption = updatedPoint[el.key].assumption;
+							const val_taken = el.value;
+							let new_point = undefined;
+							if (val_assumption === val_taken) {
+								new_point = 10 + 2 * val_taken;
+							}
+							if (val_assumption !== val_taken) {
+								new_point = -Math.abs(val_assumption - val_taken) * 2;
+							}
+
+							//calculate the total points
+							let new_total = undefined;
+							const old_total = updatedPoint[el.key].points_in_total;
+							if (index === 1) {
+								new_total = new_point;
+							}
+							if (index !== 1) {
+								new_total = old_total + new_point;
+							}
+
+							// Create a new object to avoid modifying the original object directly
+							updatedPoint[el.key] = { ...updatedPoint[el.key], taken: el.value, points_in_round: new_point, points_in_total: new_total };
 						}
-						if (val_assumption !== val_taken) {
-							new_point = -Math.abs(val_assumption - val_taken) * 2;
-						}
+					});
 
-						//calculate the total points
-						let new_total = undefined;
-						if (index === 1) {
-							new_total = new_point;
-						}
+					return updatedPoint;
+				}
+				return point;
+			})
+			.sort((a, b) => a.round - b.round);
 
-						// Create a new object to avoid modifying the original object directly
-						updatedPoint[el.key] = { ...updatedPoint[el.key], taken: el.value, points_in_round: new_point, points_in_total: new_total };
-					}
-				});
+		//remove assumption, taken, points_in_round values
+		const modifiedLastElement = Object.assign({}, newPoints.at(index - 1));
 
-				return updatedPoint;
+		//use takenArray for looping only
+		takenArray.forEach((el) => {
+			// Check if the property exists before updating
+			if (modifiedLastElement[el.key]) {
+				modifiedLastElement[el.key] = { ...modifiedLastElement[el.key], assumption: undefined, taken: undefined, points_in_round: undefined };
 			}
-			return point;
 		});
 
-		setPoints(newPoints);
-
+		setPoints([...newPoints, { ...modifiedLastElement, round: index + 1, cards: undefined }]);
 		setIndex((old) => old + 1);
+		setCards(undefined);
 		setAssumption({});
 		setTaken({});
 		setActiveIndex(0);
 	};
+
+	console.log(points);
 
 	const AddNewRow = () => {
 		const steps = [
@@ -201,6 +222,31 @@ const Table = () => {
 
 		return (
 			<div className="add-new-row">
+				<h3 className="round-title">Round: {index}.</h3>
+				{activeIndex === 0 && (
+					<span className="inline-mini-button">
+						<Button
+							icon="pi pi-plus-circle"
+							rounded
+							text
+							aria-label="Plus"
+							size="small"
+							severity="secondary"
+							style={{ width: 40, height: 40 }}
+							onClick={() => setIndex(index + 1)}
+						/>
+						<Button
+							icon="pi pi-minus-circle"
+							rounded
+							text
+							aria-label="Minus"
+							size="small"
+							severity="secondary"
+							style={{ width: 40, height: 40 }}
+							onClick={() => setIndex(index - 1)}
+						/>
+					</span>
+				)}
 				<Steps
 					activeIndex={activeIndex}
 					model={steps}
@@ -215,6 +261,7 @@ const Table = () => {
 							>
 								Cards in Round
 							</label>
+
 							<InputNumber
 								inputId="cards_in_round"
 								placeholder="Cards in round"
@@ -260,6 +307,16 @@ const Table = () => {
 				)}
 				{activeIndex === 1 && (
 					<Card>
+						<div className="mezo">
+							<label
+								htmlFor="cards_in_round"
+								className="font-bold block mb-2"
+							>
+								Cards in Round
+							</label>
+							{cards}
+						</div>
+						<br />
 						<div className="card flex flex-wrap gap-3 p-fluid">
 							{players.map((el) => {
 								return (
@@ -284,6 +341,11 @@ const Table = () => {
 								);
 							})}
 						</div>
+						{sumObjectValues(taken) !== cards && Object.keys(taken).length !== 0 && (
+							<p className="text-center text-red-500">
+								The sum of the fields <u>should</u> be equal to the card number!
+							</p>
+						)}
 						<br />
 						<div className="flex justify-content-end flex-wrap">
 							<Button
@@ -333,7 +395,6 @@ const Table = () => {
 			</div>
 
 			<AddNewRow />
-
 			<DataTable
 				value={points}
 				headerColumnGroup={headerGroup}

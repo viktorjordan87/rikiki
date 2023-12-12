@@ -1,17 +1,19 @@
 import "./Players.scss";
 import { Button } from "primereact/button";
 import { playersAtom } from "@/recoil/players";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { nanoid } from "nanoid";
 import { InputText } from "primereact/inputtext";
 import { useState } from "react";
 import { Card } from "primereact/card";
 import { ListBox } from "primereact/listbox";
+import { pointsAtom } from "@/recoil/points";
 
 const Players = () => {
 	const [addNewPlayerFieldVisible, setAddNewPlayerFieldVisible] = useState(false);
 	const [players, setPlayers] = useRecoilState(playersAtom);
 	const [name, setName] = useState("");
+	const resetPoints = useSetRecoilState(pointsAtom);
 
 	const addPlayer = () => {
 		setPlayers((old) => [...old, { id: nanoid(10), name: name }]);
@@ -76,7 +78,10 @@ const Players = () => {
 					size="small"
 					severity="danger"
 					outlined
-					onClick={() => setPlayers([])}
+					onClick={() => {
+						setPlayers([]);
+						resetPoints([]);
+					}}
 				/>
 			</div>
 		</Card>
